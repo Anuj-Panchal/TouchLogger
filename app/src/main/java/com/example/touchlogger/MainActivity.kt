@@ -1,7 +1,12 @@
 package com.example.touchlogger
 
+import android.Manifest
 import android.accessibilityservice.TouchInteractionController
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -13,9 +18,13 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.touchlogger.csv.CsvRow
 import com.example.touchlogger.csv.CsvUtil
 import com.example.touchlogger.databinding.ActivityMainBinding
+import android.provider.Settings
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
+
+        //requestPermissions()
 
         val startButton = findViewById<Button>(R.id.start_button)
 
@@ -122,7 +133,25 @@ class MainActivity : AppCompatActivity() {
 
         if(csvList.size >= BATCH_SIZE) {
             println("csv write")
-            CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
+            val WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 123
+
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    WRITE_EXTERNAL_STORAGE_REQUEST_CODE
+                )
+                    //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
+                CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
+            } else {
+                //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
+                CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
+            }
+
             csvList.clear()
         }
         return true;
