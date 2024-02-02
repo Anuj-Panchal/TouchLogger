@@ -29,7 +29,7 @@ object CsvUtil {
     }
 
     private fun getExternalStorageDirectory(context: Context): File {
-        val directory = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "CsvFolder")
+        val directory = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "Touch Logger")
         if (!directory.exists()) {
             directory.mkdirs()
         }

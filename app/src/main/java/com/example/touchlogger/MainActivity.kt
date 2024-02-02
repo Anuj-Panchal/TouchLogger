@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private var BATCH_SIZE: Int = 30;
+    private val csvList: MutableList<CsvRow> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +75,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleTouchEvent(ev: MotionEvent): Boolean {
-        val csvList: MutableList<CsvRow> = mutableListOf()
         val historySize: Int = ev.historySize;
         val pointerCount: Int = ev.pointerCount;
         for (h in 0 until historySize) {
@@ -121,6 +121,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if(csvList.size >= BATCH_SIZE) {
+            println("csv write")
             CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
             csvList.clear()
         }
