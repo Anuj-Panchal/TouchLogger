@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
 
         touchView.setOnTouchListener { _, event ->
             handleTouchEvent(event)
+            touchView.performClick()
         }
     }
 
@@ -79,7 +80,13 @@ class MainActivity : AppCompatActivity() {
         for (h in 0 until historySize) {
             println("At time " + ev.getHistoricalEventTime(h));
             for (p in 0 until pointerCount) {
-                println("  pointer" + ev.getPointerId(p) + ": (" + ev.getHistoricalX(p, h) + "," + ev.getHistoricalY(p, h) + "," + ev.getHistoricalPressure(p, h) + "," + ev.getHistoricalSize(p, h) + ")");
+                println("  pointer"
+                        + ev.getPointerId(p)
+                        + ": (" + ev.getHistoricalX(p, h)
+                        + "," + ev.getHistoricalY(p, h)
+                        + "," + ev.getHistoricalPressure(p, h)
+                        + "," + ev.getHistoricalSize(p, h)
+                        + ")");
                 csvList.add(
                     CsvRow(
                         ev.getPointerId(p).toString(),
@@ -94,7 +101,13 @@ class MainActivity : AppCompatActivity() {
         }
         println("At time " + ev.eventTime);
         for (p in 0 until pointerCount) {
-            println("  pointer" + ev.getPointerId(p) + ": (" + ev.getX(p) + "," + ev.getY(p) + "," + ev.getPressure(p) + "," + ev.getSize(p) + ")");
+            println("  pointer"
+                    + ev.getPointerId(p)
+                    + ": (" + ev.getX(p)
+                    + "," + ev.getY(p)
+                    + "," + ev.getPressure(p)
+                    + "," + ev.getSize(p)
+                    + ")");
             csvList.add(
                 CsvRow(
                     ev.getPointerId(p).toString(),
