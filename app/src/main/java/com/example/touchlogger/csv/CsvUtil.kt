@@ -3,20 +3,13 @@ package com.example.touchlogger.csv
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Environment
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.io.FileWriter
-import android.os.Build
-import android.os.Bundle
-import android.provider.Settings
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.*;
+import com.example.touchlogger.TouchLogView
 
 
 object CsvUtil {
@@ -41,11 +34,11 @@ object CsvUtil {
 
             val fileWriter = FileWriter(csvFile)
 
-            fileWriter.append("pointer_id,x_coordinate, y_coordinate, touch_pressure, finger_size, timestamp")
+            fileWriter.append("pointer_id,x_coordinate, y_coordinate, touch_pressure, finger_size, timestamp, type")
             fileWriter.append("\n")
 
             for (row in data) {
-                fileWriter.append("${row.pointer_id},${row.x_coordinate},${row.y_coordinate}, ${row.touch_pressure}, ${row.finger_size}, ${row.timestamp}")
+                fileWriter.append("${row.pointer_id},${row.x_coordinate},${row.y_coordinate}, ${row.touch_pressure}, ${row.finger_size}, ${row.timestamp}, ${row.type}")
                 fileWriter.append("\n")
             }
 
@@ -65,5 +58,33 @@ object CsvUtil {
             directory.mkdirs()
         }
         return directory
+    }
+
+    fun logToCsv(csvRow: CsvRow, csvList: MutableList<CsvRow>, BATCH_SIZE: Int, context: Context): Boolean {
+        csvList.add(csvRow);
+        if(csvList.size >= BATCH_SIZE) {
+            println("csv write")
+            val WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 123
+
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    context as Activity,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    WRITE_EXTERNAL_STORAGE_REQUEST_CODE
+                )
+                //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
+                writeCsv(context, "user_touch_scroll_logs" + System.nanoTime() + ".csv", csvList)
+            } else {
+                //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
+                writeCsv(context, "user_touch_scroll_logs" + System.nanoTime() + ".csv", csvList)
+            }
+
+            csvList.clear()
+        }
+        return true;
     }
 }

@@ -1,13 +1,7 @@
 package com.example.touchlogger
 
-import android.Manifest
-import android.accessibilityservice.TouchInteractionController
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import com.google.android.material.snackbar.Snackbar
+import android.text.BoringLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -18,13 +12,10 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import android.widget.ScrollView
 import com.example.touchlogger.csv.CsvRow
 import com.example.touchlogger.csv.CsvUtil
 import com.example.touchlogger.databinding.ActivityMainBinding
-import android.provider.Settings
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,83 +67,69 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setTouchEventListener() {
-        val touchView = View(this)
+        val touchView = ScrollView(this)
         setContentView(touchView)
+        var isScroll: MutableList<Boolean> = mutableListOf(false);
 
         touchView.setOnTouchListener { _, event ->
-            handleTouchEvent(event)
-            touchView.performClick()
+            handleEvent(event, isScroll)
         }
     }
 
-    private fun handleTouchEvent(ev: MotionEvent): Boolean {
-        val historySize: Int = ev.historySize;
-        val pointerCount: Int = ev.pointerCount;
-        for (h in 0 until historySize) {
-            println("At time " + ev.getHistoricalEventTime(h));
-            for (p in 0 until pointerCount) {
-                println("  pointer"
-                        + ev.getPointerId(p)
-                        + ": (" + ev.getHistoricalX(p, h)
-                        + "," + ev.getHistoricalY(p, h)
-                        + "," + ev.getHistoricalPressure(p, h)
-                        + "," + ev.getHistoricalSize(p, h)
-                        + ")");
-                csvList.add(
+    private fun handleEvent(ev: MotionEvent, isScroll: MutableList<Boolean>): Boolean {
+        when (ev.action) {
+            MotionEvent.ACTION_UP -> {
+                isScroll[0] = false;
+                CsvUtil.logToCsv(
                     CsvRow(
-                        ev.getPointerId(p).toString(),
-                        ev.getHistoricalX(p, h).toDouble(),
-                        ev.getHistoricalY(p, h).toDouble(),
-                        ev.getHistoricalPressure(p, h).toDouble(),
-                        ev.getHistoricalSize(p, h).toDouble(),
-                        ev.getHistoricalEventTime(p)
+                        ev.getPointerId(0).toString(),
+                        ev.getX(0).toDouble(),
+                        ev.getY(0).toDouble(),
+                        ev.getPressure(0).toDouble(),
+                        ev.getSize(0).toDouble(),
+                        ev.eventTime,
+                        1
+                    ),
+                    csvList,
+                    BATCH_SIZE,
+                    this
+                )
+            }
+            MotionEvent.ACTION_DOWN -> {
+                isScroll[0] = true;
+                CsvUtil.logToCsv(
+                    CsvRow(
+                        ev.getPointerId(0).toString(),
+                        ev.getX(0).toDouble(),
+                        ev.getY(0).toDouble(),
+                        ev.getPressure(0).toDouble(),
+                        ev.getSize(0).toDouble(),
+                        ev.eventTime,
+                        1
+                    ),
+                    csvList,
+                    BATCH_SIZE,
+                    this
+                )
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if(isScroll[0]) {
+                    CsvUtil.logToCsv(
+                        CsvRow(
+                            ev.getPointerId(0).toString(),
+                            ev.getX(0).toDouble(),
+                            ev.getY(0).toDouble(),
+                            ev.getPressure(0).toDouble(),
+                            ev.getSize(0).toDouble(),
+                            ev.eventTime,
+                            2
+                        ),
+                        csvList,
+                        BATCH_SIZE,
+                        this
                     )
-                )
+                }
             }
-        }
-        println("At time " + ev.eventTime);
-        for (p in 0 until pointerCount) {
-            println("  pointer"
-                    + ev.getPointerId(p)
-                    + ": (" + ev.getX(p)
-                    + "," + ev.getY(p)
-                    + "," + ev.getPressure(p)
-                    + "," + ev.getSize(p)
-                    + ")");
-            csvList.add(
-                CsvRow(
-                    ev.getPointerId(p).toString(),
-                    ev.getX(p).toDouble(),
-                    ev.getY(p).toDouble(),
-                    ev.getPressure(p).toDouble(),
-                    ev.getSize(p).toDouble(),
-                    ev.eventTime
-                )
-            )
-        }
-
-        if(csvList.size >= BATCH_SIZE) {
-            println("csv write")
-            val WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 123
-
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    WRITE_EXTERNAL_STORAGE_REQUEST_CODE
-                )
-                    //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
-                CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
-            } else {
-                //CsvUtil.saveCsvFile("user_touch_logs" + System.nanoTime() + ".csv", csvList)
-                CsvUtil.writeCsv(this, "user_touch_logs" + System.nanoTime() + ".csv", csvList)
-            }
-
-            csvList.clear()
         }
         return true;
     }

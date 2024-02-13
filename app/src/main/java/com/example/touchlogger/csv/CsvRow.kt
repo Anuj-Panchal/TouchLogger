@@ -6,5 +6,6 @@ data class CsvRow(
     val y_coordinate: Double,
     val touch_pressure: Double,
     val finger_size: Double,
-    val timestamp: Long
+    val timestamp: Long,
+    val type: Int
 )
